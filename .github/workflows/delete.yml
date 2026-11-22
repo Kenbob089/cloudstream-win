@@ -1,0 +1,33 @@
+name: Delete all project files
+
+# Manual only. Removes every tracked file in this repository except the workflows folder
+# (GitHub does not let the built-in token modify workflow files; delete those by hand).
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DELETE to confirm'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  delete:
+    if: ${{ github.event.inputs.confirm == 'DELETE' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove all files except .github/workflows
+        run: |
+          git ls-files -z | grep -zv '^\.github/workflows/' | xargs -0 -r git rm -q -f
+          git status --short | head -20
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --cached --quiet; then echo "Nothing to delete"; exit 0; fi
+          git commit -m "Delete all project files"
+          git push
