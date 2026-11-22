@@ -1,0 +1,62 @@
+name: Build Windows app
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable, MSVC)
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Rust tests
+        run: cargo test --workspace
+
+      - name: Build Rust core DLL (release)
+        run: cargo build --release -p cloudstream-core
+
+      - name: Check DLL exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path target/release/cloudstream_core.dll)) { throw "cloudstream_core.dll was not produced" }
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish WinUI 3 app (win-x64, self-contained)
+        run: dotnet publish app/CloudStream.csproj -c Release -r win-x64 --self-contained true -p:Platform=x64 -o publish
+
+      - name: Verify DLL is in the output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path publish/cloudstream_core.dll)) { Copy-Item target/release/cloudstream_core.dll publish/ }
+          if (-not (Test-Path publish/CloudStream.exe)) { throw "CloudStream.exe missing from publish output" }
+          Get-ChildItem publish | Select-Object -First 20 Name
+
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath CloudStream-win-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CloudStream-win-x64
+          path: CloudStream-win-x64.zip
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            **/*.binlog
+            target/**/*.log
+          if-no-files-found: ignore
