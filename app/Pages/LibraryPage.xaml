@@ -1,8 +1,0 @@
-<Page
-    x:Class="CloudStream.Pages.LibraryPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ScrollViewer>
-        <StackPanel x:Name="Root" MaxWidth="1480" HorizontalAlignment="Stretch" Padding="32,12,32,32" Spacing="18" />
-    </ScrollViewer>
-</Page>
