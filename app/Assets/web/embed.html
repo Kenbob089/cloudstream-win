@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<style>html,body{margin:0;height:100%;background:#000}iframe{border:0;width:100%;height:100%}</style>
+</head>
+<body>
+<iframe id="f" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>
+<script>
+  // Only https pages are embedded; anything else is ignored.
+  var u = new URLSearchParams(location.search).get('src');
+  if (u && u.indexOf('https://') === 0) document.getElementById('f').src = u;
+</script>
+</body>
+</html>
